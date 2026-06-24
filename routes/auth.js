@@ -2,26 +2,32 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const twilio = require('twilio');
+const nodemailer = require('nodemailer');
 const db = require('../db');
-
-// Twilio client
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
 
 // OTP store (temporary)
 const otpStore = {};
 
-// Send OTP via Email (Twilio)
-const sendOTP = async (email) => {
-  await client.verify.v2
-    .services(process.env.TWILIO_SERVICE_SID)
-    .verifications.create({
-      to: email,
-      channel: 'email',
-    });
+// Send OTP via Gmail
+const sendOTP = async (email, otp) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Quiz World - OTP Verification',
+    html: `
+      <h2>Quiz World OTP</h2>
+      <p>Your OTP is: <b style="font-size:24px">${otp}</b></p>
+      <p>Valid for 5 minutes only.</p>
+    `,
+  });
 };
 
 // Register - Step 1: Send OTP
@@ -45,16 +51,20 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Phone already registered!' });
     }
 
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
     console.log('✅ Phone unique, storing OTP...');
     otpStore[phone] = {
       name,
       email,
       password,
+      otp,
       expires: Date.now() + 5 * 60 * 1000,
     };
 
-    console.log('📧 Sending OTP via Twilio Email to ' + email);
-    await sendOTP(email);
+    console.log('📧 Sending OTP via Gmail to ' + email);
+    await sendOTP(email, otp);
     console.log('✅ OTP sent successfully!');
 
     res.json({ message: 'OTP sent to your email!' });
@@ -83,16 +93,8 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ message: 'OTP expired!' });
     }
 
-    console.log('✅ Verifying OTP with Twilio...');
-    const verification = await client.verify.v2
-      .services(process.env.TWILIO_SERVICE_SID)
-      .verificationChecks.create({
-        to: stored.email,
-        code: otp,
-      });
-
-    console.log('Verification status:', verification.status);
-    if (verification.status !== 'approved') {
+    console.log('✅ Verifying OTP...');
+    if (stored.otp !== otp) {
       console.log('❌ Invalid OTP');
       return res.status(400).json({ message: 'Invalid OTP!' });
     }
