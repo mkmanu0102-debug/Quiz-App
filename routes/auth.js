@@ -14,13 +14,13 @@ const client = twilio(
 // OTP store (temporary)
 const otpStore = {};
 
-// Send OTP via SMS
-const sendOTP = async (phone, otp) => {
+// Send OTP via Email (Twilio)
+const sendOTP = async (phone) => {
   await client.verify.v2
     .services(process.env.TWILIO_SERVICE_SID)
     .verifications.create({
-      to: `+91${phone}`,
-      channel: 'sms',
+      to: phone,
+      channel: 'email',
     });
 };
 
@@ -52,11 +52,11 @@ router.post('/register', async (req, res) => {
       expires: Date.now() + 5 * 60 * 1000,
     };
 
-    console.log('📱 Sending OTP via Twilio to +91' + phone);
+    console.log('📧 Sending OTP via Twilio Email to ' + phone);
     await sendOTP(phone);
     console.log('✅ OTP sent successfully!');
 
-    res.json({ message: 'OTP sent to your phone!' });
+    res.json({ message: 'OTP sent to your email!' });
   } catch (error) {
     console.error('🔴 Register Error:', error.message);
     console.error('Full error:', error);
@@ -86,7 +86,7 @@ router.post('/verify-otp', async (req, res) => {
     const verification = await client.verify.v2
       .services(process.env.TWILIO_SERVICE_SID)
       .verificationChecks.create({
-        to: `+91${phone}`,
+        to: phone,
         code: otp,
       });
 
