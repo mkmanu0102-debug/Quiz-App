@@ -123,7 +123,7 @@ router.post('/login', async (req, res) => {
     const { phone, password } = req.body;
 
     // Admin check
-    if (phone === 'admin' && password === 'admin123') {
+    if (phone === process.env.ADMIN_PHONE && password === process.env.ADMIN_PASSWORD) {
       console.log('✅ Admin login');
       const token = jwt.sign(
         { id: 0, role: 'admin' },
