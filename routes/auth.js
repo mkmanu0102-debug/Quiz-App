@@ -15,11 +15,11 @@ const client = twilio(
 const otpStore = {};
 
 // Send OTP via Email (Twilio)
-const sendOTP = async (phone) => {
+const sendOTP = async (email) => {
   await client.verify.v2
     .services(process.env.TWILIO_SERVICE_SID)
     .verifications.create({
-      to: phone,
+      to: email,
       channel: 'email',
     });
 };
@@ -28,9 +28,9 @@ const sendOTP = async (phone) => {
 router.post('/register', async (req, res) => {
   try {
     console.log('📝 Register request:', req.body);
-    const { name, phone, password } = req.body;
+    const { name, phone, email, password } = req.body;
 
-    if (!name || !phone || !password) {
+    if (!name || !phone || !email || !password) {
       console.log('❌ Missing fields');
       return res.status(400).json({ message: 'All fields required!' });
     }
@@ -48,12 +48,13 @@ router.post('/register', async (req, res) => {
     console.log('✅ Phone unique, storing OTP...');
     otpStore[phone] = {
       name,
+      email,
       password,
       expires: Date.now() + 5 * 60 * 1000,
     };
 
-    console.log('📧 Sending OTP via Twilio Email to ' + phone);
-    await sendOTP(phone);
+    console.log('📧 Sending OTP via Twilio Email to ' + email);
+    await sendOTP(email);
     console.log('✅ OTP sent successfully!');
 
     res.json({ message: 'OTP sent to your email!' });
@@ -86,7 +87,7 @@ router.post('/verify-otp', async (req, res) => {
     const verification = await client.verify.v2
       .services(process.env.TWILIO_SERVICE_SID)
       .verificationChecks.create({
-        to: phone,
+        to: stored.email,
         code: otp,
       });
 
