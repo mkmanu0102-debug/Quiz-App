@@ -2,41 +2,38 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const db = require('../db');
+
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // OTP store (temporary)
 const otpStore = {};
 
-// Send OTP via Gmail
+// Send OTP via SendGrid
 const sendOTP = async (email, otp) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+  const msg = {
     to: email,
+    from: 'mrabhi1962005@gmail.com',
     subject: 'Quiz World - OTP Verification',
     html: `
       <h2>Quiz World OTP</h2>
       <p>Your OTP is: <b style="font-size:24px">${otp}</b></p>
       <p>Valid for 5 minutes only.</p>
     `,
-  });
+  };
+
+  await sgMail.send(msg);
 };
 
 // Register - Step 1: Send OTP
 router.post('/register', async (req, res) => {
   try {
     console.log('📝 Register request:', req.body);
-    const { name, phone, email, password } = req.body;
+    const { name, phone, password } = req.body;
 
-    if (!name || !phone || !email || !password) {
+    if (!name || !phone || !password) {
       console.log('❌ Missing fields');
       return res.status(400).json({ message: 'All fields required!' });
     }
@@ -54,20 +51,22 @@ router.post('/register', async (req, res) => {
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
+    // Generate random email for internal use
+    const randomEmail = `user_${phone}@quizworld.local`;
+    
     console.log('✅ Phone unique, storing OTP...');
     otpStore[phone] = {
       name,
-      email,
       password,
       otp,
       expires: Date.now() + 5 * 60 * 1000,
     };
 
-    console.log('📧 Sending OTP via Gmail to ' + email);
-    await sendOTP(email, otp);
+    console.log('📧 Sending OTP via SendGrid');
+    await sendOTP(randomEmail, otp);
     console.log('✅ OTP sent successfully!');
 
-    res.json({ message: 'OTP sent to your email!' });
+    res.json({ message: 'OTP sent to your phone!' });
   } catch (error) {
     console.error('🔴 Register Error:', error.message);
     console.error('Full error:', error);
