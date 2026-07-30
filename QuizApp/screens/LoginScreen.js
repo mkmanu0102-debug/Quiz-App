@@ -67,10 +67,10 @@ export default function LoginScreen({ navigation }) {
 
         {error ? <View style={styles.errorBox}><Text style={styles.error}>{error}</Text></View> : null}
 
-        <Text style={styles.label}>{isAdminMode ? 'Admin Username or Email' : 'Email or Phone Number'}</Text>
+        <Text style={styles.label}>{isAdminMode ? 'Admin Username or Mobile Number' : 'Email or Phone Number'}</Text>
         <TextInput
           style={styles.input}
-          placeholder={isAdminMode ? 'Enter admin username or email' : 'Enter email or 10-digit number'}
+          placeholder={isAdminMode ? 'Enter admin username or mobile no' : 'Enter email or 10-digit number'}
           placeholderTextColor="#aaa"
           value={emailOrPhone}
           onChangeText={setEmailOrPhone}
