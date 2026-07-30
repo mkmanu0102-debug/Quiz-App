@@ -5,10 +5,13 @@ import {
 } from 'react-native';
 import { api } from '../api';
 
-const difficulties = [
-  { name: 'Easy', icon: '🟢', color: '#10b981' },
-  { name: 'Medium', icon: '🟡', color: '#f59e0b' },
-  { name: 'Hard', icon: '🔴', color: '#ef4444' },
+const categories = [
+  { name: 'General Knowledge', icon: '🌍', color: '#FF6B6B' },
+  { name: 'Science', icon: '🔬', color: '#4ECDC4' },
+  { name: 'History', icon: '📜', color: '#45B7D1' },
+  { name: 'Computer', icon: '💻', color: '#96CEB4' },
+  { name: 'Bihar GK', icon: '🗺️', color: '#f59e0b' },
+  { name: 'Current Affairs', icon: '📰', color: '#DDA0DD' },
 ];
 
 export default function HomeScreen({ navigation, route }) {
@@ -30,9 +33,24 @@ export default function HomeScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  const getQuizzesByDifficulty = (difficulty) => {
-    return quizzes.filter(q => q.difficulty === difficulty);
-  };
+  const renderQuizCard = (quiz, startBtnColor) => (
+    <TouchableOpacity
+      key={quiz.id}
+      style={styles.quizItem}
+      onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
+      <View style={styles.quizLeft}>
+        <View style={styles.quizInfoContainer}>
+          <Text style={styles.quizTitle}>{quiz.title}</Text>
+          <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Questions</Text>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={[styles.startBtn, { backgroundColor: startBtnColor }]}
+        onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
+        <Text style={styles.startBtnText}>Start →</Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
@@ -65,51 +83,56 @@ export default function HomeScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Select a Quiz by Difficulty</Text>
+      <Text style={styles.sectionTitle}>Choose a Subject</Text>
 
       {loading ? (
         <ActivityIndicator color="#4f46e5" size="large" style={{ marginTop: 30 }} />
       ) : (
-        difficulties.map((diff) => {
-          const diffQuizzes = getQuizzesByDifficulty(diff.name);
+        categories.map((cat) => {
+          const catQuizzes = quizzes.filter(q => q.category === cat.name);
+          const easyQuizzes = catQuizzes.filter(q => q.difficulty === 'Easy');
+          const mediumQuizzes = catQuizzes.filter(q => q.difficulty === 'Medium');
+          const hardQuizzes = catQuizzes.filter(q => q.difficulty === 'Hard');
+
           return (
-            <View key={diff.name} style={styles.categorySection}>
+            <View key={cat.name} style={styles.categorySection}>
               <View style={styles.categoryHeader}>
-                <View style={[styles.iconBox, { backgroundColor: diff.color + '25' }]}>
-                  <Text style={styles.categoryIcon}>{diff.icon}</Text>
+                <View style={[styles.iconBox, { backgroundColor: cat.color + '25' }]}>
+                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
                 </View>
                 <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{diff.name} Level</Text>
-                  <Text style={styles.quizCount}>{diffQuizzes.length} Quiz{diffQuizzes.length !== 1 ? 'zes' : ''} Available</Text>
+                  <Text style={styles.categoryName}>{cat.name}</Text>
+                  <Text style={styles.quizCount}>{catQuizzes.length} Quiz{catQuizzes.length !== 1 ? 'zes' : ''} Available</Text>
                 </View>
               </View>
 
-              {diffQuizzes.length === 0 ? (
+              {catQuizzes.length === 0 ? (
                 <View style={styles.noQuizBox}>
                   <Text style={styles.noQuizText}>🔜 Coming Soon...</Text>
                 </View>
               ) : (
-                diffQuizzes.map((quiz) => (
-                  <TouchableOpacity
-                    key={quiz.id}
-                    style={styles.quizItem}
-                    onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
-                    <View style={styles.quizLeft}>
-                      <View style={styles.quizInfoContainer}>
-                        <Text style={styles.quizTitle}>{quiz.title}</Text>
-                        <View style={styles.quizMetaRow}>
-                          <Text style={styles.quizCategory}>📁 {quiz.category}</Text>
-                          <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Qs</Text>
-                        </View>
-                      </View>
+                <View>
+                  {easyQuizzes.length > 0 && (
+                    <View style={styles.subSection}>
+                      <Text style={[styles.subSectionTitle, { color: '#10b981' }]}>🟢 Easy Level</Text>
+                      {easyQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
                     </View>
-                    <TouchableOpacity
-                      style={[styles.startBtn, { backgroundColor: diff.color }]}
-                      onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
-                      <Text style={styles.startBtnText}>Start →</Text>
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
+                  )}
+
+                  {mediumQuizzes.length > 0 && (
+                    <View style={styles.subSection}>
+                      <Text style={[styles.subSectionTitle, { color: '#f59e0b' }]}>🟡 Medium Level</Text>
+                      {mediumQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
+                    </View>
+                  )}
+
+                  {hardQuizzes.length > 0 && (
+                    <View style={styles.subSection}>
+                      <Text style={[styles.subSectionTitle, { color: '#ef4444' }]}>🔴 Hard Level</Text>
+                      {hardQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
+                    </View>
+                  )}
+                </View>
               )}
             </View>
           );
@@ -147,9 +170,11 @@ const styles = StyleSheet.create({
   quizLeft: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   quizInfoContainer: { flex: 1 },
   quizTitle: { color: '#1e1b4b', fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  quizMetaRow: { flexDirection: 'row', alignItems: 'center' },
-  quizCategory: { color: '#6b7280', fontSize: 12, marginRight: 12 },
   quizQuestions: { color: '#6b7280', fontSize: 12 },
   startBtn: { borderRadius: 8, paddingHorizontal: 15, paddingVertical: 8 },
   startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  
+  // Subsection styles for difficulties inside subjects
+  subSection: { marginTop: 10, marginBottom: 5 },
+  subSectionTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
 });
