@@ -137,4 +137,32 @@ router.get('/results', verifyAdmin, async (req, res) => {
   }
 });
 
+router.post('/create-quiz', verifyAdmin, async (req, res) => {
+  try {
+    const { title, category, difficulty, questions } = req.body;
+    if (!title || !category || !difficulty || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'All fields (title, category, difficulty, questions) are required!' });
+    }
+
+    const [quiz] = await db.execute(
+      'INSERT INTO quizzes (title, category, difficulty, total_questions) VALUES (?, ?, ?, ?)',
+      [title, category, difficulty, questions.length]
+    );
+
+    const quizId = quiz.insertId;
+
+    for (const q of questions) {
+      await db.execute(
+        'INSERT INTO questions (quiz_id, question, options, correct_answer) VALUES (?, ?, ?, ?)',
+        [quizId, q.question, JSON.stringify(q.options), q.correct_answer]
+      );
+    }
+
+    res.json({ message: 'Quiz created successfully!', quizId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+});
+
 module.exports = router;

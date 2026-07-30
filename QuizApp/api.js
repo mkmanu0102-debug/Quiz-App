@@ -126,4 +126,16 @@ export const api = {
     });
     return res.json();
   },
+
+  createQuiz: async (title, category, difficulty, questions, token) => {
+    const res = await fetch(`${BASE_URL}/admin/create-quiz`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title, category, difficulty, questions }),
+    });
+    return res.json();
+  },
 };

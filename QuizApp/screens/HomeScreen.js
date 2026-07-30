@@ -5,13 +5,10 @@ import {
 } from 'react-native';
 import { api } from '../api';
 
-const categories = [
-  { name: 'General Knowledge', icon: '🌍', color: '#FF6B6B' },
-  { name: 'Science', icon: '🔬', color: '#4ECDC4' },
-  { name: 'History', icon: '📜', color: '#45B7D1' },
-  { name: 'Computer', icon: '💻', color: '#96CEB4' },
-  { name: 'Bihar GK', icon: '🗺️', color: '#f59e0b' },
-  { name: 'Current Affairs', icon: '📰', color: '#DDA0DD' },
+const difficulties = [
+  { name: 'Easy', icon: '🟢', color: '#10b981' },
+  { name: 'Medium', icon: '🟡', color: '#f59e0b' },
+  { name: 'Hard', icon: '🔴', color: '#ef4444' },
 ];
 
 export default function HomeScreen({ navigation, route }) {
@@ -33,8 +30,8 @@ export default function HomeScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  const getQuizzesByCategory = (categoryName) => {
-    return quizzes.filter(q => q.category === categoryName);
+  const getQuizzesByDifficulty = (difficulty) => {
+    return quizzes.filter(q => q.difficulty === difficulty);
   };
 
   return (
@@ -68,51 +65,46 @@ export default function HomeScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Choose a Category</Text>
+      <Text style={styles.sectionTitle}>Select a Quiz by Difficulty</Text>
 
       {loading ? (
         <ActivityIndicator color="#4f46e5" size="large" style={{ marginTop: 30 }} />
       ) : (
-        categories.map((cat) => {
-          const catQuizzes = getQuizzesByCategory(cat.name);
+        difficulties.map((diff) => {
+          const diffQuizzes = getQuizzesByDifficulty(diff.name);
           return (
-            <View key={cat.name} style={styles.categorySection}>
+            <View key={diff.name} style={styles.categorySection}>
               <View style={styles.categoryHeader}>
-                <View style={[styles.iconBox, { backgroundColor: cat.color + '25' }]}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                <View style={[styles.iconBox, { backgroundColor: diff.color + '25' }]}>
+                  <Text style={styles.categoryIcon}>{diff.icon}</Text>
                 </View>
                 <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
-                  <Text style={styles.quizCount}>{catQuizzes.length} Quiz Available</Text>
+                  <Text style={styles.categoryName}>{diff.name} Level</Text>
+                  <Text style={styles.quizCount}>{diffQuizzes.length} Quiz{diffQuizzes.length !== 1 ? 'zes' : ''} Available</Text>
                 </View>
               </View>
 
-              {catQuizzes.length === 0 ? (
+              {diffQuizzes.length === 0 ? (
                 <View style={styles.noQuizBox}>
                   <Text style={styles.noQuizText}>🔜 Coming Soon...</Text>
                 </View>
               ) : (
-                catQuizzes.map((quiz) => (
+                diffQuizzes.map((quiz) => (
                   <TouchableOpacity
                     key={quiz.id}
                     style={styles.quizItem}
                     onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
                     <View style={styles.quizLeft}>
-                      <View style={[styles.diffBadge, {
-                        backgroundColor:
-                          quiz.difficulty === 'Easy' ? '#d1fae5' :
-                          quiz.difficulty === 'Medium' ? '#fef3c7' : '#fee2e2'
-                      }]}>
-                        <Text style={[styles.quizDifficulty, {
-                          color:
-                            quiz.difficulty === 'Easy' ? '#065f46' :
-                            quiz.difficulty === 'Medium' ? '#92400e' : '#991b1b'
-                        }]}>{quiz.difficulty}</Text>
+                      <View style={styles.quizInfoContainer}>
+                        <Text style={styles.quizTitle}>{quiz.title}</Text>
+                        <View style={styles.quizMetaRow}>
+                          <Text style={styles.quizCategory}>📁 {quiz.category}</Text>
+                          <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Qs</Text>
+                        </View>
                       </View>
-                      <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Qs</Text>
                     </View>
                     <TouchableOpacity
-                      style={[styles.startBtn, { backgroundColor: cat.color }]}
+                      style={[styles.startBtn, { backgroundColor: diff.color }]}
                       onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
                       <Text style={styles.startBtnText}>Start →</Text>
                     </TouchableOpacity>
@@ -139,10 +131,10 @@ const styles = StyleSheet.create({
   logoutBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   logoutText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   btnRow: { flexDirection: 'row', marginBottom: 20 },
-  navBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center',   },
+  navBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center' },
   navBtnText: { color: '#374151', fontSize: 13, fontWeight: '700' },
   sectionTitle: { color: '#1e1b4b', fontSize: 18, fontWeight: '700', marginBottom: 15 },
-  categorySection: { backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 15,   },
+  categorySection: { backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 15 },
   categoryHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   categoryIcon: { fontSize: 24 },
@@ -151,11 +143,13 @@ const styles = StyleSheet.create({
   quizCount: { color: '#9ca3af', fontSize: 12, marginTop: 2 },
   noQuizBox: { backgroundColor: '#f9fafb', borderRadius: 8, padding: 12, alignItems: 'center' },
   noQuizText: { color: '#9ca3af', fontSize: 13 },
-  quizItem: { backgroundColor: '#f9fafb', borderRadius: 10, padding: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',   },
+  quizItem: { backgroundColor: '#f9fafb', borderRadius: 10, padding: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   quizLeft: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  diffBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginRight: 8 },
-  quizDifficulty: { fontSize: 12, fontWeight: '700' },
-  quizQuestions: { color: '#6b7280', fontSize: 13 },
+  quizInfoContainer: { flex: 1 },
+  quizTitle: { color: '#1e1b4b', fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  quizMetaRow: { flexDirection: 'row', alignItems: 'center' },
+  quizCategory: { color: '#6b7280', fontSize: 12, marginRight: 12 },
+  quizQuestions: { color: '#6b7280', fontSize: 12 },
   startBtn: { borderRadius: 8, paddingHorizontal: 15, paddingVertical: 8 },
   startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
