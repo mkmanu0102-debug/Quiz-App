@@ -47,9 +47,19 @@ export default function AdminScreen({ navigation, route }) {
       Alert.alert('Error', 'Please enter a topic!');
       return;
     }
+    const num = parseInt(numQuestions, 10);
+    if (isNaN(num) || num <= 0) {
+      Alert.alert('Error', 'Please enter a valid number of questions!');
+      return;
+    }
+    if (num > 25) {
+      Alert.alert('Limit Exceeded', 'For AI generation, please limit to maximum 25 questions to avoid server timeout.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await api.generateQuiz(topic, numQuestions, difficulty, category, token);
+      const res = await api.generateQuiz(topic, num.toString(), difficulty, category, token);
       if (res.quizId) {
         Alert.alert('Success', 'Quiz generated successfully!');
         setTopic('');
@@ -240,6 +250,17 @@ export default function AdminScreen({ navigation, route }) {
               </TouchableOpacity>
             ))}
           </View>
+          <TextInput
+            style={[styles.input, { marginTop: -5, marginBottom: 15 }]}
+            placeholder="Or enter custom number (e.g. 15, Max 25)"
+            placeholderTextColor="#666"
+            value={numQuestions}
+            onChangeText={(val) => {
+              const clean = val.replace(/[^0-9]/g, '');
+              setNumQuestions(clean);
+            }}
+            keyboardType="numeric"
+          />
 
           <Text style={styles.label}>Difficulty Level</Text>
           <View style={styles.row}>

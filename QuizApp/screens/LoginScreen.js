@@ -10,10 +10,11 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAdminMode, setIsAdminMode] = useState(false);
 
   const handleLogin = async () => {
     if (!emailOrPhone || !password) {
-      setError('Please enter email/phone and password!');
+      setError('Please enter username/email/phone and password!');
       return;
     }
     setLoading(true);
@@ -24,6 +25,11 @@ export default function LoginScreen({ navigation }) {
         if (res.user.role === 'admin') {
           navigation.navigate('Admin', { user: res.user, token: res.token });
         } else {
+          if (isAdminMode) {
+            setError('Access denied. This is not an admin account.');
+            setLoading(false);
+            return;
+          }
           navigation.navigate('Home', { user: res.user, token: res.token });
         }
       } else {
@@ -44,14 +50,27 @@ export default function LoginScreen({ navigation }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Welcome Back!</Text>
+        <View style={styles.modeRow}>
+          <TouchableOpacity 
+            style={[styles.modeTab, !isAdminMode && styles.modeTabActive]} 
+            onPress={() => { setIsAdminMode(false); setError(''); }}>
+            <Text style={[styles.modeTabText, !isAdminMode && styles.modeTabTextActive]}>User Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.modeTab, isAdminMode && styles.modeTabActive]} 
+            onPress={() => { setIsAdminMode(true); setError(''); }}>
+            <Text style={[styles.modeTabText, isAdminMode && styles.modeTabTextActive]}>Admin Login</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.cardTitle}>{isAdminMode ? '🤖 Admin Portal' : 'Welcome Back!'}</Text>
 
         {error ? <View style={styles.errorBox}><Text style={styles.error}>{error}</Text></View> : null}
 
-        <Text style={styles.label}>Email or Phone Number</Text>
+        <Text style={styles.label}>{isAdminMode ? 'Admin Username or Email' : 'Email or Phone Number'}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter email or 10-digit number"
+          placeholder={isAdminMode ? 'Enter admin username or email' : 'Enter email or 10-digit number'}
           placeholderTextColor="#aaa"
           value={emailOrPhone}
           onChangeText={setEmailOrPhone}
@@ -69,17 +88,21 @@ export default function LoginScreen({ navigation }) {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
-          <Text style={styles.forgotLink}>Forgot Password?</Text>
-        </TouchableOpacity>
+        {!isAdminMode && (
+          <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotLink}>Forgot Password?</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.registerBtn} onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerText}>Don't have an account? <Text style={styles.registerLink}>Register</Text></Text>
-        </TouchableOpacity>
+        {!isAdminMode && (
+          <TouchableOpacity style={styles.registerBtn} onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.registerText}>Don't have an account? <Text style={styles.registerLink}>Register</Text></Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -92,16 +115,23 @@ const styles = StyleSheet.create({
   title: { fontSize: 36, color: '#fff', marginBottom: 5 },
   subtitle: { fontSize: 16, color: '#c7d2fe' },
   card: { backgroundColor: '#fff', margin: 20, borderRadius: 20, padding: 25, marginTop: 30 },
-  cardTitle: { fontSize: 22, color: '#1e1b4b', marginBottom: 20 },
+  cardTitle: { fontSize: 22, color: '#1e1b4b', marginBottom: 20, fontWeight: '700' },
   errorBox: { backgroundColor: '#fee2e2', borderRadius: 8, padding: 10, marginBottom: 15 },
   error: { color: '#dc2626', fontSize: 13 },
   label: { color: '#374151', fontSize: 14, marginBottom: 6 },
   input: { backgroundColor: '#f9fafb', borderRadius: 10, padding: 14, color: '#111', fontSize: 15, marginBottom: 16 },
   button: { backgroundColor: '#4f46e5', borderRadius: 10, padding: 15, alignItems: 'center', marginTop: 5 },
-  buttonText: { color: '#fff', fontSize: 16 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   registerBtn: { marginTop: 20, alignItems: 'center' },
   registerText: { color: '#6b7280', fontSize: 14 },
   registerLink: { color: '#4f46e5' },
   forgotBtn: { alignSelf: 'flex-end', marginBottom: 16, marginTop: -8 },
   forgotLink: { color: '#4f46e5', fontSize: 13, fontWeight: '600' },
+  
+  // Tab styles for user/admin login switch
+  modeRow: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 10, padding: 4, marginBottom: 20 },
+  modeTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
+  modeTabActive: { backgroundColor: '#4f46e5' },
+  modeTabText: { color: '#6b7280', fontSize: 14, fontWeight: '600' },
+  modeTabTextActive: { color: '#fff' },
 });
