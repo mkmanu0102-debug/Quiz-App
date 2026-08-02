@@ -33,14 +33,14 @@ export default function HomeScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  const renderQuizCard = (quiz, startBtnColor) => (
+  const renderQuizCard = (quiz, startBtnColor, index) => (
     <TouchableOpacity
       key={quiz.id}
       style={styles.quizItem}
       onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
       <View style={styles.quizLeft}>
         <View style={styles.quizInfoContainer}>
-          <Text style={styles.quizTitle}>{quiz.title}</Text>
+          <Text style={styles.quizTitle}>{quiz.category} Quiz #{index + 1}</Text>
           <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Questions</Text>
         </View>
       </View>
@@ -115,21 +115,21 @@ export default function HomeScreen({ navigation, route }) {
                   {easyQuizzes.length > 0 && (
                     <View style={styles.subSection}>
                       <Text style={[styles.subSectionTitle, { color: '#10b981' }]}>🟢 Easy Level</Text>
-                      {easyQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
+                      {easyQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
                     </View>
                   )}
 
                   {mediumQuizzes.length > 0 && (
                     <View style={styles.subSection}>
                       <Text style={[styles.subSectionTitle, { color: '#f59e0b' }]}>🟡 Medium Level</Text>
-                      {mediumQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
+                      {mediumQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
                     </View>
                   )}
 
                   {hardQuizzes.length > 0 && (
                     <View style={styles.subSection}>
                       <Text style={[styles.subSectionTitle, { color: '#ef4444' }]}>🔴 Hard Level</Text>
-                      {hardQuizzes.map((quiz) => renderQuizCard(quiz, cat.color))}
+                      {hardQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
                     </View>
                   )}
                 </View>
