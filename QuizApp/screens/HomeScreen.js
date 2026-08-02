@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator
+  ScrollView, ActivityIndicator, Alert
 } from 'react-native';
 import { api } from '../api';
 
@@ -33,24 +33,22 @@ export default function HomeScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  const renderQuizCard = (quiz, startBtnColor, index) => (
-    <TouchableOpacity
-      key={quiz.id}
-      style={styles.quizItem}
-      onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
-      <View style={styles.quizLeft}>
-        <View style={styles.quizInfoContainer}>
-          <Text style={styles.quizTitle}>{quiz.category} Quiz #{index + 1}</Text>
-          <Text style={styles.quizQuestions}>📝 {quiz.total_questions} Questions</Text>
-        </View>
-      </View>
-      <TouchableOpacity
-        style={[styles.startBtn, { backgroundColor: startBtnColor }]}
-        onPress={() => navigation.navigate('Quiz', { quiz, token, user })}>
-        <Text style={styles.startBtnText}>Start →</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
+  const handleDifficultyPress = (quizzesList, categoryName, difficultyLevel) => {
+    if (quizzesList.length === 0) return;
+    if (quizzesList.length === 1) {
+      navigation.navigate('Quiz', { quiz: quizzesList[0], token, user });
+    } else {
+      // Show native dialog to select from multiple quizzes of the same difficulty
+      Alert.alert(
+        `${categoryName} - ${difficultyLevel}`,
+        'Select a quiz to start:',
+        quizzesList.map((quiz, idx) => ({
+          text: `Quiz #${idx + 1} (${quiz.total_questions} Qs)`,
+          onPress: () => navigation.navigate('Quiz', { quiz, token, user })
+        })).concat([{ text: 'Cancel', style: 'cancel' }])
+      );
+    }
+  };
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
@@ -102,38 +100,64 @@ export default function HomeScreen({ navigation, route }) {
                 </View>
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{cat.name}</Text>
-                  <Text style={styles.quizCount}>{catQuizzes.length} Quiz{catQuizzes.length !== 1 ? 'zes' : ''} Available</Text>
+                  <Text style={styles.quizCount}>
+                    {catQuizzes.length} Quiz{catQuizzes.length !== 1 ? 'zes' : ''} Available
+                  </Text>
                 </View>
               </View>
 
-              {catQuizzes.length === 0 ? (
-                <View style={styles.noQuizBox}>
-                  <Text style={styles.noQuizText}>🔜 Coming Soon...</Text>
-                </View>
-              ) : (
-                <View>
-                  {easyQuizzes.length > 0 && (
-                    <View style={styles.subSection}>
-                      <Text style={[styles.subSectionTitle, { color: '#10b981' }]}>🟢 Easy Level</Text>
-                      {easyQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
-                    </View>
-                  )}
+              <View style={styles.difficultyRow}>
+                {/* Easy Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.difficultyBtn,
+                    easyQuizzes.length > 0 ? styles.easyActive : styles.diffInactive
+                  ]}
+                  disabled={easyQuizzes.length === 0}
+                  onPress={() => handleDifficultyPress(easyQuizzes, cat.name, 'Easy')}>
+                  <Text style={[
+                    styles.diffBtnText,
+                    easyQuizzes.length > 0 ? styles.textEasy : styles.textInactive
+                  ]}>
+                    🟢 Easy Level {easyQuizzes.length > 0 ? `(${easyQuizzes.length} Quiz${easyQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
+                  </Text>
+                  {easyQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
+                </TouchableOpacity>
 
-                  {mediumQuizzes.length > 0 && (
-                    <View style={styles.subSection}>
-                      <Text style={[styles.subSectionTitle, { color: '#f59e0b' }]}>🟡 Medium Level</Text>
-                      {mediumQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
-                    </View>
-                  )}
+                {/* Medium Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.difficultyBtn,
+                    mediumQuizzes.length > 0 ? styles.mediumActive : styles.diffInactive
+                  ]}
+                  disabled={mediumQuizzes.length === 0}
+                  onPress={() => handleDifficultyPress(mediumQuizzes, cat.name, 'Medium')}>
+                  <Text style={[
+                    styles.diffBtnText,
+                    mediumQuizzes.length > 0 ? styles.textMedium : styles.textInactive
+                  ]}>
+                    🟡 Medium Level {mediumQuizzes.length > 0 ? `(${mediumQuizzes.length} Quiz${mediumQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
+                  </Text>
+                  {mediumQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
+                </TouchableOpacity>
 
-                  {hardQuizzes.length > 0 && (
-                    <View style={styles.subSection}>
-                      <Text style={[styles.subSectionTitle, { color: '#ef4444' }]}>🔴 Hard Level</Text>
-                      {hardQuizzes.map((quiz, idx) => renderQuizCard(quiz, cat.color, idx))}
-                    </View>
-                  )}
-                </View>
-              )}
+                {/* Hard Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.difficultyBtn,
+                    hardQuizzes.length > 0 ? styles.hardActive : styles.diffInactive
+                  ]}
+                  disabled={hardQuizzes.length === 0}
+                  onPress={() => handleDifficultyPress(hardQuizzes, cat.name, 'Hard')}>
+                  <Text style={[
+                    styles.diffBtnText,
+                    hardQuizzes.length > 0 ? styles.textHard : styles.textInactive
+                  ]}>
+                    🔴 Hard Level {hardQuizzes.length > 0 ? `(${hardQuizzes.length} Quiz${hardQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
+                  </Text>
+                  {hardQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
+                </TouchableOpacity>
+              </View>
             </View>
           );
         })
@@ -164,17 +188,53 @@ const styles = StyleSheet.create({
   categoryInfo: { flex: 1 },
   categoryName: { color: '#1e1b4b', fontSize: 16, fontWeight: '700' },
   quizCount: { color: '#9ca3af', fontSize: 12, marginTop: 2 },
-  noQuizBox: { backgroundColor: '#f9fafb', borderRadius: 8, padding: 12, alignItems: 'center' },
-  noQuizText: { color: '#9ca3af', fontSize: 13 },
-  quizItem: { backgroundColor: '#f9fafb', borderRadius: 10, padding: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  quizLeft: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  quizInfoContainer: { flex: 1 },
-  quizTitle: { color: '#1e1b4b', fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  quizQuestions: { color: '#6b7280', fontSize: 12 },
-  startBtn: { borderRadius: 8, paddingHorizontal: 15, paddingVertical: 8 },
-  startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   
-  // Subsection styles for difficulties inside subjects
-  subSection: { marginTop: 10, marginBottom: 5 },
-  subSectionTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  // Difficulty row section styling
+  difficultyRow: { marginTop: 10 },
+  difficultyBtn: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    padding: 14, 
+    borderRadius: 12, 
+    marginBottom: 8,
+    borderWidth: 1,
+  },
+  diffInactive: {
+    backgroundColor: '#f9fafb',
+    borderColor: '#f3f4f6',
+  },
+  easyActive: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  mediumActive: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+  },
+  hardActive: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fca5a5',
+  },
+  diffBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  textInactive: {
+    color: '#9ca3af',
+  },
+  textEasy: {
+    color: '#047857',
+  },
+  textMedium: {
+    color: '#b45309',
+  },
+  textHard: {
+    color: '#b91c1c',
+  },
+  arrowText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4f46e5',
+  },
 });
