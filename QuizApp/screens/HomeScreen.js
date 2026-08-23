@@ -92,6 +92,8 @@ export default function HomeScreen({ navigation, route }) {
           const mediumQuizzes = catQuizzes.filter(q => q.difficulty === 'Medium');
           const hardQuizzes = catQuizzes.filter(q => q.difficulty === 'Hard');
 
+          if (catQuizzes.length === 0) return null;
+
           return (
             <View key={cat.name} style={styles.categorySection}>
               <View style={styles.categoryHeader}>
@@ -108,55 +110,40 @@ export default function HomeScreen({ navigation, route }) {
 
               <View style={styles.difficultyRow}>
                 {/* Easy Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.difficultyBtn,
-                    easyQuizzes.length > 0 ? styles.easyActive : styles.diffInactive
-                  ]}
-                  disabled={easyQuizzes.length === 0}
-                  onPress={() => handleDifficultyPress(easyQuizzes, cat.name, 'Easy')}>
-                  <Text style={[
-                    styles.diffBtnText,
-                    easyQuizzes.length > 0 ? styles.textEasy : styles.textInactive
-                  ]}>
-                    🟢 Easy Level {easyQuizzes.length > 0 ? `(${easyQuizzes.length} Quiz${easyQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
-                  </Text>
-                  {easyQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
-                </TouchableOpacity>
+                {easyQuizzes.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.difficultyBtn, styles.easyActive]}
+                    onPress={() => handleDifficultyPress(easyQuizzes, cat.name, 'Easy')}>
+                    <Text style={[styles.diffBtnText, styles.textEasy]}>
+                      🟢 Easy Level {easyQuizzes.length > 1 ? `(${easyQuizzes.length} Quizzes)` : ''}
+                    </Text>
+                    <Text style={styles.arrowText}>Play →</Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Medium Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.difficultyBtn,
-                    mediumQuizzes.length > 0 ? styles.mediumActive : styles.diffInactive
-                  ]}
-                  disabled={mediumQuizzes.length === 0}
-                  onPress={() => handleDifficultyPress(mediumQuizzes, cat.name, 'Medium')}>
-                  <Text style={[
-                    styles.diffBtnText,
-                    mediumQuizzes.length > 0 ? styles.textMedium : styles.textInactive
-                  ]}>
-                    🟡 Medium Level {mediumQuizzes.length > 0 ? `(${mediumQuizzes.length} Quiz${mediumQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
-                  </Text>
-                  {mediumQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
-                </TouchableOpacity>
+                {mediumQuizzes.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.difficultyBtn, styles.mediumActive]}
+                    onPress={() => handleDifficultyPress(mediumQuizzes, cat.name, 'Medium')}>
+                    <Text style={[styles.diffBtnText, styles.textMedium]}>
+                      🟡 Medium Level {mediumQuizzes.length > 1 ? `(${mediumQuizzes.length} Quizzes)` : ''}
+                    </Text>
+                    <Text style={styles.arrowText}>Play →</Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Hard Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.difficultyBtn,
-                    hardQuizzes.length > 0 ? styles.hardActive : styles.diffInactive
-                  ]}
-                  disabled={hardQuizzes.length === 0}
-                  onPress={() => handleDifficultyPress(hardQuizzes, cat.name, 'Hard')}>
-                  <Text style={[
-                    styles.diffBtnText,
-                    hardQuizzes.length > 0 ? styles.textHard : styles.textInactive
-                  ]}>
-                    🔴 Hard Level {hardQuizzes.length > 0 ? `(${hardQuizzes.length} Quiz${hardQuizzes.length !== 1 ? 'zes' : ''})` : '(Coming Soon)'}
-                  </Text>
-                  {hardQuizzes.length > 0 && <Text style={styles.arrowText}>Play →</Text>}
-                </TouchableOpacity>
+                {hardQuizzes.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.difficultyBtn, styles.hardActive]}
+                    onPress={() => handleDifficultyPress(hardQuizzes, cat.name, 'Hard')}>
+                    <Text style={[styles.diffBtnText, styles.textHard]}>
+                      🔴 Hard Level {hardQuizzes.length > 1 ? `(${hardQuizzes.length} Quizzes)` : ''}
+                    </Text>
+                    <Text style={styles.arrowText}>Play →</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           );
