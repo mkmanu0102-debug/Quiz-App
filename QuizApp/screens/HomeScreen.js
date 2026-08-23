@@ -81,10 +81,14 @@ export default function HomeScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Choose a Subject</Text>
+      {quizzes.length > 0 && <Text style={styles.sectionTitle}>Choose a Subject</Text>}
 
       {loading ? (
         <ActivityIndicator color="#4f46e5" size="large" style={{ marginTop: 30 }} />
+      ) : quizzes.length === 0 ? (
+        <View style={styles.noQuizBox}>
+          <Text style={styles.noQuizText}>📭 No quizzes available right now. Please create or generate a quiz from the Admin Panel!</Text>
+        </View>
       ) : (
         categories.map((cat) => {
           const catQuizzes = quizzes.filter(q => q.category === cat.name);
@@ -223,5 +227,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#4f46e5',
+  },
+  noQuizBox: { 
+    backgroundColor: '#fff', 
+    borderRadius: 16, 
+    padding: 25, 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0',
+    marginTop: 10,
+  },
+  noQuizText: { 
+    color: '#6b7280', 
+    fontSize: 14, 
+    textAlign: 'center', 
+    lineHeight: 20, 
+    fontWeight: '600',
   },
 });
