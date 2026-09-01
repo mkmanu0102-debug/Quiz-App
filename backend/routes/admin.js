@@ -31,38 +31,55 @@ Return ONLY a JSON array like this:
 ]
 No extra text, only JSON array.`;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      })
-    });
+    const models = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.6-27b'];
+    let data = null;
+    let lastError = null;
 
-    const data = await response.json();
-    console.log('Groq response:', JSON.stringify(data));
+    for (const model of models) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+          })
+        });
 
-    if (!data.choices || data.choices.length === 0) {
-      return res.status(500).json({ message: 'Groq API error: ' + JSON.stringify(data) });
+        const resJson = await response.json();
+        if (resJson.choices && resJson.choices.length > 0) {
+          data = resJson;
+          break;
+        } else {
+          lastError = resJson;
+          console.error(`Model ${model} failed:`, JSON.stringify(resJson));
+        }
+      } catch (err) {
+        lastError = err;
+        console.error(`Model ${model} exception:`, err);
+      }
+    }
+
+    if (!data || !data.choices || data.choices.length === 0) {
+      return res.status(500).json({ message: 'Groq API error: ' + JSON.stringify(lastError) });
     }
 
     const text = data.choices[0].message.content;
     const jsonMatch = text.match(/\[[\s\S]*\]/);
 
     if (!jsonMatch) {
-      return res.status(500).json({ message: 'Could not generate questions!' });
+      return res.status(500).json({ message: 'Could not generate questions from AI response!' });
     }
 
     const questions = JSON.parse(jsonMatch[0]);
 
     const [quiz] = await db.execute(
       'INSERT INTO quizzes (title, category, difficulty, total_questions) VALUES (?, ?, ?, ?)',
-      [topic, category, difficulty, numQuestions]
+      [topic, category, difficulty, questions.length]
     );
 
     const quizId = quiz.insertId;
@@ -70,14 +87,14 @@ No extra text, only JSON array.`;
     for (const q of questions) {
       await db.execute(
         'INSERT INTO questions (quiz_id, question, options, correct_answer) VALUES (?, ?, ?, ?)',
-        [quizId, q.question, JSON.stringify(q.options), q.correct]
+        [quizId, q.question, JSON.stringify(q.options), q.correct ?? q.correct_answer ?? 0]
       );
     }
 
     res.json({ message: 'Quiz generated and saved!', quizId });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error!' });
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 
