@@ -109,11 +109,13 @@ router.get('/quizzes', verifyAdmin, async (req, res) => {
 
 router.delete('/quiz/:id', verifyAdmin, async (req, res) => {
   try {
+    await db.execute('DELETE FROM results WHERE quiz_id = ?', [req.params.id]);
     await db.execute('DELETE FROM questions WHERE quiz_id = ?', [req.params.id]);
     await db.execute('DELETE FROM quizzes WHERE id = ?', [req.params.id]);
     res.json({ message: 'Quiz deleted!' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error!' });
+    console.error('Delete error:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, ActivityIndicator, Alert
+  StyleSheet, ScrollView, ActivityIndicator, Alert, Platform
 } from 'react-native';
 import { api } from '../api';
 
@@ -75,26 +75,34 @@ export default function AdminScreen({ navigation, route }) {
   };
 
   const handleDelete = async (quizId) => {
-    Alert.alert(
-      'Delete Quiz',
-      'Are you sure you want to delete this quiz?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deleteQuiz(quizId, token);
-              loadQuizzes();
-              Alert.alert('Success', 'Quiz deleted!');
-            } catch (err) {
-              Alert.alert('Error', 'Error deleting quiz!');
-            }
+    const doDelete = async () => {
+      try {
+        await api.deleteQuiz(quizId, token);
+        loadQuizzes();
+        Alert.alert('Success', 'Quiz deleted!');
+      } catch (err) {
+        Alert.alert('Error', 'Error deleting quiz!');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to delete this quiz?')) {
+        await doDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Quiz',
+        'Are you sure you want to delete this quiz?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: doDelete
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleEdit = (quiz) => {

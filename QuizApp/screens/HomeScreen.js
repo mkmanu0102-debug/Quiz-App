@@ -5,14 +5,14 @@ import {
 } from 'react-native';
 import { api } from '../api';
 
-const categories = [
-  { name: 'General Knowledge', icon: '🌍', color: '#FF6B6B' },
-  { name: 'Science', icon: '🔬', color: '#4ECDC4' },
-  { name: 'History', icon: '📜', color: '#45B7D1' },
-  { name: 'Computer', icon: '💻', color: '#96CEB4' },
-  { name: 'Bihar GK', icon: '🗺️', color: '#f59e0b' },
-  { name: 'Current Affairs', icon: '📰', color: '#DDA0DD' },
-];
+const categoryMeta = {
+  'General Knowledge': { icon: '🌍', color: '#FF6B6B' },
+  'Science': { icon: '🔬', color: '#4ECDC4' },
+  'History': { icon: '📜', color: '#45B7D1' },
+  'Computer': { icon: '💻', color: '#96CEB4' },
+  'Bihar GK': { icon: '🗺️', color: '#f59e0b' },
+  'Current Affairs': { icon: '📰', color: '#DDA0DD' },
+};
 
 export default function HomeScreen({ navigation, route }) {
   const { user, token } = route.params;
@@ -49,6 +49,8 @@ export default function HomeScreen({ navigation, route }) {
       );
     }
   };
+
+  const activeCategories = Array.from(new Set(quizzes.map(q => q.category)));
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
@@ -90,22 +92,22 @@ export default function HomeScreen({ navigation, route }) {
           <Text style={styles.noQuizText}>📭 No quizzes available right now. Please create or generate a quiz from the Admin Panel!</Text>
         </View>
       ) : (
-        categories.map((cat) => {
-          const catQuizzes = quizzes.filter(q => q.category === cat.name);
+        activeCategories.map((categoryName) => {
+          const catQuizzes = quizzes.filter(q => q.category === categoryName);
           const easyQuizzes = catQuizzes.filter(q => q.difficulty === 'Easy');
           const mediumQuizzes = catQuizzes.filter(q => q.difficulty === 'Medium');
           const hardQuizzes = catQuizzes.filter(q => q.difficulty === 'Hard');
 
-          if (catQuizzes.length === 0) return null;
+          const meta = categoryMeta[categoryName] || { icon: '📚', color: '#4f46e5' };
 
           return (
-            <View key={cat.name} style={styles.categorySection}>
+            <View key={categoryName} style={styles.categorySection}>
               <View style={styles.categoryHeader}>
-                <View style={[styles.iconBox, { backgroundColor: cat.color + '25' }]}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                <View style={[styles.iconBox, { backgroundColor: meta.color + '25' }]}>
+                  <Text style={styles.categoryIcon}>{meta.icon}</Text>
                 </View>
                 <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
+                  <Text style={styles.categoryName}>{categoryName}</Text>
                   <Text style={styles.quizCount}>
                     {catQuizzes.length} Quiz{catQuizzes.length !== 1 ? 'zes' : ''} Available
                   </Text>
@@ -117,7 +119,7 @@ export default function HomeScreen({ navigation, route }) {
                 {easyQuizzes.length > 0 && (
                   <TouchableOpacity
                     style={[styles.difficultyBtn, styles.easyActive]}
-                    onPress={() => handleDifficultyPress(easyQuizzes, cat.name, 'Easy')}>
+                    onPress={() => handleDifficultyPress(easyQuizzes, categoryName, 'Easy')}>
                     <Text style={[styles.diffBtnText, styles.textEasy]}>
                       🟢 Easy Level {easyQuizzes.length > 1 ? `(${easyQuizzes.length} Quizzes)` : ''}
                     </Text>
@@ -129,7 +131,7 @@ export default function HomeScreen({ navigation, route }) {
                 {mediumQuizzes.length > 0 && (
                   <TouchableOpacity
                     style={[styles.difficultyBtn, styles.mediumActive]}
-                    onPress={() => handleDifficultyPress(mediumQuizzes, cat.name, 'Medium')}>
+                    onPress={() => handleDifficultyPress(mediumQuizzes, categoryName, 'Medium')}>
                     <Text style={[styles.diffBtnText, styles.textMedium]}>
                       🟡 Medium Level {mediumQuizzes.length > 1 ? `(${mediumQuizzes.length} Quizzes)` : ''}
                     </Text>
@@ -141,7 +143,7 @@ export default function HomeScreen({ navigation, route }) {
                 {hardQuizzes.length > 0 && (
                   <TouchableOpacity
                     style={[styles.difficultyBtn, styles.hardActive]}
-                    onPress={() => handleDifficultyPress(hardQuizzes, cat.name, 'Hard')}>
+                    onPress={() => handleDifficultyPress(hardQuizzes, categoryName, 'Hard')}>
                     <Text style={[styles.diffBtnText, styles.textHard]}>
                       🔴 Hard Level {hardQuizzes.length > 1 ? `(${hardQuizzes.length} Quizzes)` : ''}
                     </Text>
