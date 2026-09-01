@@ -1,2 +1,11 @@
-backend_nodejs_backup/
-backend_python/
+.env
+*.env
+backend/.env
+backend-python/.env
+backend-python/.env.local
+node_modules/
+__pycache__/
+*.pyc
+.expo/
+dist/
+build/
