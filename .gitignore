@@ -9,3 +9,5 @@ __pycache__/
 .expo/
 dist/
 build/
+*.sqlite
+*.sqlite3

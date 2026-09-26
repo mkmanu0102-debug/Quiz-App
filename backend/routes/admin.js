@@ -7,7 +7,7 @@ const verifyAdmin = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'No token!' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'quizworld_secret_key_2024');
     if (decoded.role !== 'admin') return res.status(403).json({ message: 'Admin only!' });
     req.user = decoded;
     next();

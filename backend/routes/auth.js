@@ -232,7 +232,7 @@ router.post('/login', async (req, res) => {
     console.log('✅ Login successful, generating token...');
     const token = jwt.sign(
       { id: user.id, role: 'user' },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'quizworld_secret_key_2024',
       { expiresIn: '7d' }
     );
 
