@@ -3,12 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, ActivityIndicator, Alert, Platform
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../api';
 
 const categories = ['General Knowledge', 'Science', 'History', 'Computer', 'Bihar GK', 'Current Affairs'];
 
 export default function AdminScreen({ navigation, route }) {
-  const { user, token } = route.params;
+  const { user, token } = route.params || {};
   const [topic, setTopic] = useState('');
   const [numQuestions, setNumQuestions] = useState('5');
   const [difficulty, setDifficulty] = useState('Medium');
@@ -33,10 +34,34 @@ export default function AdminScreen({ navigation, route }) {
     loadQuizzes();
   }, []);
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout from Admin Panel?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('userToken');
+            await AsyncStorage.removeItem('userData');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          }
+        }
+      ]
+    );
+  };
+
   const loadQuizzes = async () => {
     try {
-      const res = await api.getAdminQuizzes(token);
-      if (Array.isArray(res)) setQuizzes(res);
+      if (token) {
+        const res = await api.getAdminQuizzes(token);
+        if (Array.isArray(res)) setQuizzes(res);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -199,7 +224,7 @@ export default function AdminScreen({ navigation, route }) {
         <Text style={styles.subtitle}>Welcome, {user?.name}!</Text>
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={() => navigation.navigate('Login')}>
+          onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>

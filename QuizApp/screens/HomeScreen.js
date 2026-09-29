@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../api';
 
 const categoryMeta = {
@@ -15,7 +16,7 @@ const categoryMeta = {
 };
 
 export default function HomeScreen({ navigation, route }) {
-  const { user, token } = route.params;
+  const { user, token } = route.params || {};
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +26,36 @@ export default function HomeScreen({ navigation, route }) {
 
   const loadQuizzes = async () => {
     try {
-      const res = await api.getQuizzes(token);
-      if (Array.isArray(res)) setQuizzes(res);
+      if (token) {
+        const res = await api.getQuizzes(token);
+        if (Array.isArray(res)) setQuizzes(res);
+      }
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('userToken');
+            await AsyncStorage.removeItem('userData');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          }
+        }
+      ]
+    );
   };
 
   const handleDifficultyPress = (quizzesList, categoryName, difficultyLevel) => {
@@ -38,7 +63,6 @@ export default function HomeScreen({ navigation, route }) {
     if (quizzesList.length === 1) {
       navigation.navigate('Quiz', { quiz: quizzesList[0], token, user });
     } else {
-      // Show native dialog to select from multiple quizzes of the same difficulty
       Alert.alert(
         `${categoryName} - ${difficultyLevel}`,
         'Select a quiz to start:',
@@ -59,11 +83,11 @@ export default function HomeScreen({ navigation, route }) {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.title}>🎯 Quiz World</Text>
-            <Text style={styles.welcome}>Welcome, {user?.name}!</Text>
+            <Text style={styles.welcome}>Welcome, {user?.name || 'User'}!</Text>
           </View>
           <TouchableOpacity
             style={styles.logoutBtn}
-            onPress={() => navigation.navigate('Login')}>
+            onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>

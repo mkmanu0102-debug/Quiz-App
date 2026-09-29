@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, ActivityIndicator
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../api';
 
 export default function LoginScreen({ navigation }) {
@@ -11,6 +12,21 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isAdminMode, setIsAdminMode] = useState(false);
+
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem('savedEmailOrPhone');
+      const savedPass = await AsyncStorage.getItem('savedPassword');
+      if (savedUser) setEmailOrPhone(savedUser);
+      if (savedPass) setPassword(savedPass);
+    } catch (e) {
+      console.error('Error loading saved credentials:', e);
+    }
+  };
 
   const handleLogin = async () => {
     if (!emailOrPhone || !password) {
@@ -22,15 +38,27 @@ export default function LoginScreen({ navigation }) {
     try {
       const res = await api.login(emailOrPhone.trim(), password);
       if (res.token) {
+        // Save session & credentials persistently
+        await AsyncStorage.setItem('userToken', res.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(res.user));
+        await AsyncStorage.setItem('savedEmailOrPhone', emailOrPhone.trim());
+        await AsyncStorage.setItem('savedPassword', password);
+
         if (res.user.role === 'admin') {
-          navigation.navigate('Admin', { user: res.user, token: res.token });
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Admin', params: { user: res.user, token: res.token } }],
+          });
         } else {
           if (isAdminMode) {
             setError('Access denied. This is not an admin account.');
             setLoading(false);
             return;
           }
-          navigation.navigate('Home', { user: res.user, token: res.token });
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home', params: { user: res.user, token: res.token } }],
+          });
         }
       } else {
         setError(res.message || 'Login failed!');
@@ -45,7 +73,7 @@ export default function LoginScreen({ navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.topSection}>
         <Text style={styles.logo}>🎯</Text>
-        <Text style={styles.title}>Quiz World</Text>
+        <Text style={styles.title}>QUIZ WORLD</Text>
         <Text style={styles.subtitle}>Test Your Knowledge</Text>
       </View>
 
@@ -112,7 +140,7 @@ const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: '#f0f4ff' },
   topSection: { backgroundColor: '#4f46e5', padding: 50, alignItems: 'center' },
   logo: { fontSize: 60, marginBottom: 10 },
-  title: { fontSize: 36, color: '#fff', marginBottom: 5 },
+  title: { fontSize: 36, color: '#fff', marginBottom: 5, fontWeight: '800' },
   subtitle: { fontSize: 16, color: '#c7d2fe' },
   card: { backgroundColor: '#fff', margin: 20, borderRadius: 20, padding: 25, marginTop: 30 },
   cardTitle: { fontSize: 22, color: '#1e1b4b', marginBottom: 20, fontWeight: '700' },
