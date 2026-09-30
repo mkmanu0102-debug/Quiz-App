@@ -188,9 +188,14 @@ function executeJSQuery(sql, params = []) {
   // 2. Users Table Queries
   if (lowerSQL.includes('from users') && lowerSQL.includes('select')) {
     if (lowerSQL.includes('where')) {
-      const isEmail = lowerSQL.includes('email');
+      const isWhereEmail = lowerSQL.includes('where email');
+      const isWherePhone = lowerSQL.includes('where phone');
       const val = params[0];
-      const filtered = data.users.filter(u => isEmail ? u.email === val : u.phone === val);
+      const filtered = data.users.filter(u => {
+        if (isWhereEmail) return u.email === val;
+        if (isWherePhone) return u.phone === val;
+        return u.email === val || u.phone === val;
+      });
       return [filtered, []];
     } else {
       return [data.users.map(u => ({ id: u.id, name: u.name, email: u.email || u.phone, created_at: u.created_at })), []];
@@ -198,11 +203,12 @@ function executeJSQuery(sql, params = []) {
   }
 
   if (lowerSQL.includes('insert into users')) {
-    const isEmail = lowerSQL.includes('email');
+    const isEmail = lowerSQL.includes('(name, email') || lowerSQL.includes('email,');
     const newUser = {
       id: (data.users.reduce((max, u) => Math.max(max, u.id || 0), 0) || 0) + 1,
       name: params[0],
-      [isEmail ? 'email' : 'phone']: params[1],
+      email: isEmail ? params[1] : null,
+      phone: !isEmail ? params[1] : null,
       password: params[2],
       created_at: new Date().toISOString()
     };
