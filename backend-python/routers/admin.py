@@ -209,7 +209,7 @@ def get_users(admin: dict = Depends(verify_admin)):
     try:
         conn = get_db()
         with conn.cursor() as cursor:
-            cursor.execute("SELECT id, name, email, created_at FROM users")
+            cursor.execute("SELECT id, name, email, phone, created_at FROM users")
             users = cursor.fetchall()
         conn.close()
         return users
