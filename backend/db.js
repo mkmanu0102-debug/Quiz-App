@@ -47,8 +47,9 @@ function seedDefaultStore() {
   const hashedPass = bcrypt.hashSync('123456', 10);
   const defaultData = {
     users: [
-      { id: 1, name: 'Abhimanyu Kumar', email: 'mrabhi962005@gmail.com', password: hashedPass, created_at: new Date().toISOString() },
-      { id: 2, name: 'Demo User', email: 'mkmanu0102@gmail.com', password: hashedPass, created_at: new Date().toISOString() }
+      { id: 1, name: 'Abhimanyu Kumar (Mr Abhi)', email: 'mrabhi962005@gmail.com', phone: '8802340285', password: bcrypt.hashSync('Abhi@121', 10), created_at: new Date().toISOString() },
+      { id: 2, name: 'Raushan', email: 'raushan@gmail.com', phone: '9988776655', password: hashedPass, created_at: new Date().toISOString() },
+      { id: 3, name: 'Demo User', email: 'mkmanu0102@gmail.com', phone: '9876543210', password: hashedPass, created_at: new Date().toISOString() }
     ],
     quizzes: [
       {
